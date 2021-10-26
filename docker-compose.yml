@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+
+  mysqldb:
+    image: mysql:5.7
+    container_name: mysql_container
+    # この環境設定ファイルの中身が不明
+    # 現状MYSQL_DATABASEに設定したデータベースが勝手に作られる。但しログインはrootユーザーを使用
+    environment:
+      # 必須。スーパーユーザーであるrootアカウントに設定するためのパスワードを指定する
+      MYSQL_ROOT_PASSWORD: root
+      # オプション。イメージの起動時に作成するデータベースの名前を指定する
+      MYSQL_DATABASE: docker_mysql_testdb
+      # オプション。新規ユーザーの作成とそのユーザーのパスワードの設定に使用する。
+      # MYSQL_DATABASE変数で指定されたデータベースに対して、スーパーユーザーとしての権限が与えられる。
+      # rootユーザーの作成に使う必要はなし。rootユーザーは自動で作成される。
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+      TZ: 'Asia/Tokyo'
+    volumes:
+      # /docker/db配下に色々とデータが作成されている。勝手に。細かい知識は抜きに必要になりそうかな。
+      - ./docker/db/data:/var/lib/mysql
+      - ./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./docker/db/sql:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    # mysqlの文字コードをutf8mb4というものに指定するコマンド
+    # dockerの公式イメージでは文字コードの設定がutf8になってないらしい。
+    # アプリサーバーとmysqkサーバーで文字コードの相違が発生するとエラーでこれを指定するみたい
+    # my.cnfファイルの編集と、牡蠣コマンドで指定する方法がある。恐らく下記方法の方が楽
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+
